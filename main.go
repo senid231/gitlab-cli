@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
+	"github.com/droundy/goopt"
 	"github.com/senid231/gitlab-cli/api"
-	"github.com/senid231/goopt"
 	"os"
 )
 
