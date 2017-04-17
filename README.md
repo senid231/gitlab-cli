@@ -19,20 +19,39 @@ project_name: namespace/project
 ```
 
 ## Usage
+help usage
+```
+Usage of gitlab-cli:
+        api [options] <subcommand> <action> [options]
+Options:
+  -d <path>      --dir=<path>              path to project directory
+  -A <token>     --access-token=<token>    private access token
+  -P <name>      --project=<name>          namespaced name of project
+  -s <branch>    --src-branch=<branch>     namespaced name of project
+  -t <branch>    --target-branch=<branch>  target branch
+  -a <username>  --assignee=<username>     assignee username
+  -T <text>      --title=<text>            title of MR
+  -U <baseUrl>   --url=<baseUrl>           base URL for gitlab API
+  -h             --help                    Show usage message
+  -v             --version                 Show version
+Subcommands:
+  mr            Merge Request manipulations
+  Actions:
+    create      creates merge request
+
+```
 example
-```bash
-// without config
-gitlab-cli mr create -P namespace/project -a senid231 -A "PRIVATETOKEN" -U "https://gitlab.com/api/v3"
-// with config
-gitlab-cli mr create -a senid231
+```
+$ gitlab-cli mr create -a senid231
+https://gitlab.com/namespace/project/merge_requests/123
 ```
 
 ## Installation
-If you has go environment you can just do:
-```bash
+If you has go environment you can do:
+```
 go install github.com/senid231/gitlab-cli
 ```
-or just extract binary to your system: 
+Or just extract binary to your system: 
 [Linux](https://github.com/senid231/gitlab-cli/releases/download/v1.1.0/gitlab-cli_linux_amd64.tar.gz)
 or
 [OSX](https://github.com/senid231/gitlab-cli/releases/download/v1.1.0/gitlab-cli_darwin_amd64.tar.gz)
