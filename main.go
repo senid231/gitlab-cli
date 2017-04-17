@@ -22,7 +22,7 @@ func parseOpts() (*api.Opts, []string) {
 		return "Console gitlab client.\n" +
 			"Use v3 API"
 	}
-	goopt.Version = "1.0.0"
+	goopt.Version = "1.1.0"
 	goopt.Summary = "api [options] <subcommand> <action> [options]"
 	goopt.Author = "Denis Talakevich <senid231@gmail.com>"
 	goopt.ExtraUsage = "Subcommands:\n" +
