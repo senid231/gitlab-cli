@@ -1,3 +1,5 @@
-/bin/
-
+# bin file
 /gitlab-cli
+
+# yaml config
+/gitlab_cli.yml

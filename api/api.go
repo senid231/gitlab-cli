@@ -2,19 +2,21 @@ package api
 
 import (
 	"fmt"
-	"github.com/xanzy/go-gitlab"
 	"os"
 	"strings"
+
+	"github.com/xanzy/go-gitlab"
 )
 
 type Opts struct {
-	Token     *string
-	Project   *string
-	SrcBranch *string
-	DstBranch *string
-	Assignee  *string
-	Title     *string
-	BaseUrl   *string
+	Token       *string
+	Project     *string
+	SrcBranch   *string
+	DstBranch   *string
+	Assignee    *string
+	Title       *string
+	BaseUrl     *string
+	ProjectPath *string
 }
 
 func failErr(str string, err error) {
@@ -60,6 +62,13 @@ func setupApi(url string, token string) *gitlab.Client {
 }
 
 func createMergeRequest(cli *gitlab.Client, opts *Opts) string {
+	if *opts.Assignee == "" {
+		failStr("assignee name required")
+	}
+	if *opts.Project == "" {
+		failStr("project name required")
+	}
+
 	assigneeID := findUser(cli, opts.Assignee).ID
 
 	mrOpts := gitlab.CreateMergeRequestOptions{
