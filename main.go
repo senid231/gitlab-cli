@@ -1,8 +1,10 @@
+// gitlab-cli is a command line tool that uses gitlab api
 package main
 
 import (
 	"fmt"
-	"os"
+	"log"
+	"strings"
 
 	"github.com/droundy/goopt"
 	"github.com/senid231/gitlab-cli/api"
@@ -12,12 +14,16 @@ func parseOpts() (*api.Opts, []string) {
 	opts := &api.Opts{}
 	opts.ProjectPath = goopt.StringWithLabel([]string{"-d", "--dir"}, "", "<path>", "path to project directory")
 	opts.Token = goopt.StringWithLabel([]string{"-A", "--access-token"}, "", "<token>", "private access token")
-	opts.Project = goopt.StringWithLabel([]string{"-P", "--project"}, "", "<name>", "namespaced name of project")
+	opts.ForkProject = goopt.StringWithLabel([]string{"-F", "--fork-project"}, "", "<name>", "namespaced path to fork project")
+	opts.Project = goopt.StringWithLabel([]string{"-P", "--project"}, "", "<name>", "namespaced path to main project")
 	opts.SrcBranch = goopt.StringWithLabel([]string{"-s", "--src-branch"}, "", "<branch>", "namespaced name of project")
 	opts.DstBranch = goopt.StringWithLabel([]string{"-t", "--target-branch"}, "master", "<branch>", "target branch")
 	opts.Assignee = goopt.StringWithLabel([]string{"-a", "--assignee"}, "", "<username>", "assignee username")
 	opts.Title = goopt.StringWithLabel([]string{"-T", "--title"}, "", "<text>", "title of MR")
-	opts.BaseUrl = goopt.StringWithLabel([]string{"-U", "--url"}, "", "<baseUrl>", "base URL for gitlab API")
+	opts.BaseURL = goopt.StringWithLabel([]string{"-U", "--url"}, "", "<baseUrl>", "base URL for gitlab API")
+	opts.Description = goopt.StringWithLabel([]string{"-D", "--description"}, "", "<text>", "MR description")
+	opts.Debug = goopt.Flag([]string{"--debug"}, []string{}, "debug mode", "")
+
 	goopt.Description = func() string {
 		return "Console gitlab client.\n" +
 			"Use v3 API"
@@ -35,38 +41,31 @@ func parseOpts() (*api.Opts, []string) {
 	return opts, args
 }
 
-func optErr(str string) {
-	fmt.Println(goopt.Usage(), "\n"+str)
-	os.Exit(1)
-}
-
-func optErrf(format string, x ...interface{}) {
-	optErr(fmt.Sprintf(format, x...))
-}
-
-// gitlab-ci mr create -P namespace/project -s my-branch -t master -a senid231 -A "TOKEN" -T "some title" -U "https://gitlab.com/api/v3"
-
 func main() {
 	opts, args := parseOpts()
 	conf, err := api.NewConfig(opts.ProjectPath)
 	if err != nil {
-		fmt.Printf("[warn] can't find config for %s\n%v\n", *opts.ProjectPath, err)
+		log.Printf("Warning! Can't find config for %s\n%v\n", *opts.ProjectPath, err)
 	}
 	if err != nil && *opts.ProjectPath != "" {
-		optErrf("Can't find config %s in %s", api.CONFIG_NAME, *opts.ProjectPath)
+		log.Fatalf("Can't find config %s in %s", api.ConfigName, *opts.ProjectPath)
 	}
 	if *opts.ProjectPath == "" {
 		*opts.ProjectPath = "./"
 	}
 	gitInfo, err := api.NewGitInfo(opts.ProjectPath)
 	if err != nil {
-		optErrf("Can't get git info: %v", err)
+		log.Printf("Can't get git info: %v", err)
 	}
 	if *opts.SrcBranch == "" {
 		*opts.SrcBranch = gitInfo.CurrentBranch
 	}
+	commitParts := strings.SplitN(gitInfo.LastCommit, "\n", 2)
 	if *opts.Title == "" {
-		*opts.Title = gitInfo.LastCommit
+		*opts.Title = commitParts[0]
+	}
+	if *opts.Description == "" && len(commitParts) > 1 {
+		*opts.Description = commitParts[1]
 	}
 	if *opts.Token == "" {
 		*opts.Token = conf.Token
@@ -74,17 +73,20 @@ func main() {
 	if *opts.Project == "" {
 		*opts.Project = conf.ProjectName
 	}
-	if *opts.BaseUrl == "" {
-		*opts.BaseUrl = conf.Url
+	if *opts.ForkProject == "" {
+		*opts.ForkProject = conf.ForkProjectName
+	}
+	if *opts.BaseURL == "" {
+		*opts.BaseURL = conf.URL
 	}
 
 	if len(args) != 2 {
-		optErr("invalid arguments")
+		log.Print("invalid arguments")
 	}
 	switch {
 	case args[0] == "mr" && args[1] == "create":
 		fmt.Println(api.CreateMergeRequest(opts))
 	default:
-		optErrf("invalid subcommmand and/or action: %s %s", args[0], args[1])
+		log.Printf("invalid subcommmand and/or action: %s %s", args[0], args[1])
 	}
 }

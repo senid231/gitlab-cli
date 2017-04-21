@@ -2,4 +2,4 @@
 /gitlab-cli
 
 # yaml config
-/gitlab_cli.yml
+/.gitlab_cli.yml

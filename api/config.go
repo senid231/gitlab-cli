@@ -1,24 +1,28 @@
+// Package api provides access to gitlab HTTP API, YAML config and GIT repo info
 package api
 
 import (
-	"fmt"
 	"io/ioutil"
+	"log"
 	"strings"
 
 	"gopkg.in/yaml.v2"
 )
 
-const CONFIG_NAME = ".gitlab_cli.yml"
+// ConfigName is a name of yaml config file
+const ConfigName = ".gitlab_cli.yml"
 
+// Config holds options from config file
 type Config struct {
-	Token       string `yaml:"token"`
-	Url         string `yaml:"url"`
-	ProjectName string `yaml:"project_name"`
+	Token           string `yaml:"token"`
+	URL             string `yaml:"url"`
+	ProjectName     string `yaml:"project_name"`
+	ForkProjectName string `yaml:"fork_project_name"`
 }
 
-func NewConfig(path *string) (config *Config, err error) {
-	fmt.Println("NewConfig")
-	config = &Config{Url: "https://gitlab.com"}
+// NewConfig reads config file from path and return Config object
+func NewConfig(path *string) (*Config, error) {
+	config := &Config{URL: "https://gitlab.com"}
 	yamlPath := *path
 	if yamlPath == "" {
 		yamlPath = "./"
@@ -26,16 +30,15 @@ func NewConfig(path *string) (config *Config, err error) {
 	if !strings.HasSuffix(yamlPath, "/") {
 		yamlPath += "/"
 	}
-	yamlPath += CONFIG_NAME
-	fmt.Printf("gonna read yaml from %s", yamlPath)
+	yamlPath += ConfigName
 	data, err := ioutil.ReadFile(yamlPath)
 	if err != nil {
-		fmt.Printf("error read yaml\n%v\n", err)
-		return
+		log.Printf("error read yaml\n%v\n", err)
+		return config, err
 	}
 	err = yaml.Unmarshal(data, config)
 	if err != nil {
-		fmt.Printf("error unmarshal yaml\n%v\n", err)
+		log.Printf("error unmarshal yaml\n%v\n", err)
 	}
-	return
+	return config, err
 }

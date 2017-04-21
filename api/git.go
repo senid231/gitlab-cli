@@ -1,3 +1,4 @@
+// Package api provides access to gitlab HTTP API, YAML config and GIT repo info
 package api
 
 import (
@@ -6,11 +7,13 @@ import (
 	"gopkg.in/src-d/go-git.v4"
 )
 
+// GitInfo holds git repo options
 type GitInfo struct {
 	CurrentBranch string
 	LastCommit    string
 }
 
+// NewGitInfo read git options for path anf returns GitInfo object
 func NewGitInfo(path *string) (*GitInfo, error) {
 	info := &GitInfo{}
 	repo, err := git.PlainOpen(*path)
