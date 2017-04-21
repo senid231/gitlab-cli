@@ -26,6 +26,6 @@ clean:
 	@$(info:msg=cleaning)
 	@go clean -i . ./api && echo "cleaned"
 
-install: clean
+install: clean vet lint
 	@$(info:msg=installing)
 	@go install && echo "installed"

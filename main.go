@@ -4,6 +4,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 
 	"github.com/droundy/goopt"
@@ -29,12 +30,13 @@ func parseOpts() (*api.Opts, []string) {
 			"Use v3 API"
 	}
 	goopt.Version = "1.1.0"
-	goopt.Summary = "api [options] <subcommand> <action> [options]"
+	goopt.Summary = "api [options] <subcommand> <action> [<args>...] [options]"
 	goopt.Author = "Denis Talakevich <senid231@gmail.com>"
 	goopt.ExtraUsage = "Subcommands:\n" +
 		"  mr\t\tMerge Request manipulations\n" +
 		"  Actions:\n" +
-		"    create\tcreates merge request"
+		"    create\tcreates merge request\n" +
+		"    show\tshows merge request details"
 
 	goopt.Parse(nil)
 	args := goopt.Args
@@ -48,14 +50,14 @@ func main() {
 		log.Printf("Warning! Can't find config for %s\n%v\n", *opts.ProjectPath, err)
 	}
 	if err != nil && *opts.ProjectPath != "" {
-		log.Fatalf("Can't find config %s in %s", api.ConfigName, *opts.ProjectPath)
+		log.Fatalf("Can't find config %s in %s\n", api.ConfigName, *opts.ProjectPath)
 	}
 	if *opts.ProjectPath == "" {
 		*opts.ProjectPath = "./"
 	}
 	gitInfo, err := api.NewGitInfo(opts.ProjectPath)
 	if err != nil {
-		log.Printf("Can't get git info: %v", err)
+		log.Printf("Can't get git info: %v\n", err)
 	}
 	if *opts.SrcBranch == "" {
 		*opts.SrcBranch = gitInfo.CurrentBranch
@@ -80,13 +82,19 @@ func main() {
 		*opts.BaseURL = conf.URL
 	}
 
-	if len(args) != 2 {
-		log.Print("invalid arguments")
+	if len(args) < 2 {
+		log.Fatalln("not enough arguments")
 	}
 	switch {
-	case args[0] == "mr" && args[1] == "create":
-		fmt.Println(api.CreateMergeRequest(opts))
+	case len(args) == 2 && args[0] == "mr" && args[1] == "create":
+		fmt.Printf("%s\n", api.CreateMergeRequest(opts))
+	case len(args) == 3 && args[0] == "mr" && args[1] == "show":
+		mrID, err := strconv.Atoi(args[2])
+		if err != nil {
+			log.Fatalf("MR ID %q must be an integer\n", args[2])
+		}
+		fmt.Printf("%s\n", api.FindMergeRequest(opts, mrID))
 	default:
-		log.Printf("invalid subcommmand and/or action: %s %s", args[0], args[1])
+		log.Printf("invalid subcommmand and/or action: %s %s\n", args[0], args[1])
 	}
 }
